@@ -1,6 +1,6 @@
 package components;
 
-import jade.Component;
+import glengine.Component;
 
 public class FontRenderer extends Component {
 

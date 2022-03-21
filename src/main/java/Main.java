@@ -1,4 +1,4 @@
-import jade.Window;
+import glengine.Window;
 
 public class Main {
 	/**
