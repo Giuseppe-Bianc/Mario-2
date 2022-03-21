@@ -40,6 +40,12 @@ public class Spritesheet {
 		}
 	}
 
+	/**
+	 * Returns the sprite at the given index
+	 *
+	 * @param index The index of the sprite you want to get.
+	 * @return A Sprite object.
+	 */
 	public Sprite getSprite(int index) {
 		return this.sprites.get(index);
 	}

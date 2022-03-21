@@ -17,10 +17,12 @@ import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
 public class RenderBatch implements Comparable<RenderBatch> {
-	private final int POS_SIZE = 2;
-	private final int COLOR_SIZE = 4;
-	private final int TEX_COORDS_SIZE = 2;
-	private final int TEX_ID_SIZE = 1;
+	private static final boolean NRM = false;
+	private static final String SHPT = "assets/shaders/default.glsl";
+	private static final int POS_SIZE = 2;
+	private static final int COLOR_SIZE = 4;
+	private static final int TEX_COORDS_SIZE = 2;
+	private static final int TEX_ID_SIZE = 1;
 
 	private final int POS_OFFSET = 0;
 	private final int COLOR_OFFSET = POS_OFFSET + POS_SIZE * Float.BYTES;
@@ -29,21 +31,21 @@ public class RenderBatch implements Comparable<RenderBatch> {
 	private final int VERTEX_SIZE = 9;
 	private final int VERTEX_SIZE_BYTES = VERTEX_SIZE * Float.BYTES;
 
-	private SpriteRenderer[] sprites;
+	private final SpriteRenderer[] sprites;
 	private int numSprites;
 	private boolean hasRoom;
-	private float[] vertices;
-	private int[] texSlots = {0, 1, 2, 3, 4, 5, 6, 7};
+	private final float[] vertices;
+	private final int[] texSlots = {0, 1, 2, 3, 4, 5, 6, 7};
 
-	private List<Texture> textures;
+	private final List<Texture> textures;
 	private int vaoID, vboID;
-	private int maxBatchSize;
-	private Shader shader;
-	private int zIndex;
+	private final int maxBatchSize;
+	private final Shader shader;
+	private final int zIndex;
 
 	public RenderBatch(int maxBatchSize, int zIndex) {
 		this.zIndex = zIndex;
-		shader = AssetPool.getShader("assets/shaders/default.glsl");
+		shader = AssetPool.getShader(SHPT);
 		this.sprites = new SpriteRenderer[maxBatchSize];
 		this.maxBatchSize = maxBatchSize;
 		vertices = new float[maxBatchSize * 4 * VERTEX_SIZE];
@@ -59,27 +61,28 @@ public class RenderBatch implements Comparable<RenderBatch> {
 
 		vboID = glGenBuffers();
 		glBindBuffer(GL_ARRAY_BUFFER, vboID);
-		glBufferData(GL_ARRAY_BUFFER, vertices.length * Float.BYTES, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, (long) vertices.length * Float.BYTES, GL_DYNAMIC_DRAW);
 
 		int eboID = glGenBuffers();
 		int[] indices = generateIndices();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboID);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
 
-		// Enable the buffer attribute pointers
-		glVertexAttribPointer(0, POS_SIZE, GL_FLOAT, false, VERTEX_SIZE_BYTES, POS_OFFSET);
+		glVertexAttribPointer(0, POS_SIZE, GL_FLOAT, NRM, VERTEX_SIZE_BYTES, POS_OFFSET);
+		glVertexAttribPointer(1, COLOR_SIZE, GL_FLOAT, NRM, VERTEX_SIZE_BYTES, COLOR_OFFSET);
+		glVertexAttribPointer(2, TEX_COORDS_SIZE, GL_FLOAT, NRM, VERTEX_SIZE_BYTES, TEX_COORDS_OFFSET);
+		glVertexAttribPointer(3, TEX_ID_SIZE, GL_FLOAT, NRM, VERTEX_SIZE_BYTES, TEX_ID_OFFSET);
 		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, COLOR_SIZE, GL_FLOAT, false, VERTEX_SIZE_BYTES, COLOR_OFFSET);
 		glEnableVertexAttribArray(1);
-
-		glVertexAttribPointer(2, TEX_COORDS_SIZE, GL_FLOAT, false, VERTEX_SIZE_BYTES, TEX_COORDS_OFFSET);
 		glEnableVertexAttribArray(2);
-
-		glVertexAttribPointer(3, TEX_ID_SIZE, GL_FLOAT, false, VERTEX_SIZE_BYTES, TEX_ID_OFFSET);
 		glEnableVertexAttribArray(3);
 	}
 
+	/**
+	 * Adds a sprite to the batch
+	 *
+	 * @param spr The SpriteRenderer that you want to add to the batch.
+	 */
 	public void addSprite(SpriteRenderer spr) {
 		int index = this.numSprites;
 		this.sprites[index] = spr;
@@ -94,12 +97,19 @@ public class RenderBatch implements Comparable<RenderBatch> {
 		loadVertexProperties(index);
 
 		if (numSprites >= this.maxBatchSize) {
-			this.hasRoom = false;
+			this.hasRoom = NRM;
 		}
 	}
 
+	/**
+	 * The first thing we do is check if any of the sprites have been updated since the last time we
+	 * rendered. If so, we need to rebuffer the data. We then iterate over the sprites and load the
+	 * vertex properties into the shader. We then rebuffer the data again, but this time we don't
+	 * need to check if the sprites have been updated. We then bind the vbo, upload the data, and
+	 * draw the triangles
+	 */
 	public void render() {
-		boolean rebufferData = false;
+		boolean rebufferData = NRM;
 		for (int i = 0; i < numSprites; i++) {
 			SpriteRenderer spr = sprites[i];
 			if (spr.isDirty()) {
@@ -113,7 +123,6 @@ public class RenderBatch implements Comparable<RenderBatch> {
 			glBufferSubData(GL_ARRAY_BUFFER, 0, vertices);
 		}
 
-		// Use shader
 		shader.use();
 		shader.uploadMat4f("uProjection", Window.getScene().camera().getProjectionMatrix());
 		shader.uploadMat4f("uView", Window.getScene().camera().getViewMatrix());
@@ -133,12 +142,17 @@ public class RenderBatch implements Comparable<RenderBatch> {
 		glDisableVertexAttribArray(1);
 		glBindVertexArray(0);
 
-		for (int i = 0; i < textures.size(); i++) {
-			textures.get(i).unbind();
+		for (Texture texture : textures) {
+			texture.unbind();
 		}
 		shader.detach();
 	}
 
+	/**
+	 * For each sprite, it creates a vertex for each corner of the sprite
+	 *
+	 * @param index The index of the sprite in the sprites array.
+	 */
 	private void loadVertexProperties(int index) {
 		SpriteRenderer sprite = this.sprites[index];
 
@@ -181,6 +195,11 @@ public class RenderBatch implements Comparable<RenderBatch> {
 		}
 	}
 
+	/**
+	 * Generate a list of indices for the elements in the batch
+	 *
+	 * @return An array of integers.
+	 */
 	private int[] generateIndices() {
 		int[] elements = new int[6 * maxBatchSize];
 		for (int i = 0; i < maxBatchSize; i++) {
@@ -190,6 +209,13 @@ public class RenderBatch implements Comparable<RenderBatch> {
 		return elements;
 	}
 
+	/**
+	 * Given an array of elements, and an index, load the indices of the elements that make up the
+	 * face of the triangle at that index
+	 *
+	 * @param elements The array of elements to be loaded.
+	 * @param index    The index of the element to load.
+	 */
 	private void loadElementIndices(int[] elements, int index) {
 		int offsetArrayIndex = 6 * index;
 		int offset = 4 * index;
@@ -201,22 +227,51 @@ public class RenderBatch implements Comparable<RenderBatch> {
 		elements[offsetArrayIndex + 5] = offset + 1;
 	}
 
+	/**
+	 * Returns true if the room is occupied, false otherwise
+	 *
+	 * @return A boolean value.
+	 */
 	public boolean hasRoom() {
 		return this.hasRoom;
 	}
 
+	/**
+	 * If there are less than 8 textures in the textures list, return true.
+	 *
+	 * @return A boolean value.
+	 */
 	public boolean hasTextureRoom() {
 		return this.textures.size() < 8;
 	}
 
+	/**
+	 * Returns true if the given texture is in the list of textures
+	 *
+	 * @param tex The texture to check for.
+	 * @return A boolean value.
+	 */
 	public boolean hasTexture(Texture tex) {
 		return this.textures.contains(tex);
 	}
 
+	/**
+	 * Returns the z-index of the object
+	 *
+	 * @return The zIndex of the current object.
+	 */
 	public int zIndex() {
 		return this.zIndex;
 	}
 
+	/**
+	 * This function compares the zIndex of this RenderBatch to the zIndex of the RenderBatch passed
+	 * in as a parameter
+	 *
+	 * @param o The RenderBatch to compare to.
+	 * @return The return type is int. The compareTo method is being overridden. The compareTo
+	 * method is being overridden to compare the zIndex of the two RenderBatch objects.
+	 */
 	@Override
 	public int compareTo(RenderBatch o) {
 		return Integer.compare(this.zIndex, o.zIndex());

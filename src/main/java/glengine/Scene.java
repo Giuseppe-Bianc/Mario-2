@@ -16,10 +16,16 @@ public abstract class Scene {
 
 	}
 
+	/**
+	 * This function is called when the game is first started
+	 */
 	public void init() {
 
 	}
 
+	/**
+	 * For each game object in the gameObjects array, call the start method on the game object
+	 */
 	public void start() {
 		for (GameObject go : gameObjects) {
 			go.start();
@@ -28,6 +34,11 @@ public abstract class Scene {
 		isRunning = true;
 	}
 
+	/**
+	 * Adds a game object to the scene
+	 *
+	 * @param go The GameObject to add to the scene.
+	 */
 	public void addGameObjectToScene(GameObject go) {
 		if (!isRunning) {
 			gameObjects.add(go);
@@ -38,8 +49,20 @@ public abstract class Scene {
 		}
 	}
 
+	/**
+	 * "Update the game state."
+	 * <p>
+	 * The update function is called once per frame, and is where the game state is updated
+	 *
+	 * @param dt The time in seconds since the last update.
+	 */
 	public abstract void update(float dt);
 
+	/**
+	 * Returns the camera that is attached to the scene
+	 *
+	 * @return The camera object.
+	 */
 	public Camera camera() {
 		return this.camera;
 	}

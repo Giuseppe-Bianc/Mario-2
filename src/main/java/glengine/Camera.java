@@ -5,7 +5,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 public class Camera {
-	private Matrix4f projectionMatrix, viewMatrix;
+	private final Matrix4f projectionMatrix, viewMatrix;
 	public Vector2f position;
 
 	public Camera(Vector2f position) {
@@ -15,12 +15,30 @@ public class Camera {
 		adjustProjection();
 	}
 
+	/**
+	 * The projection matrix is a 4x4 matrix that defines the transformation from 3D world space to
+	 * 2D screen space.<p>The ortho function sets up a projection matrix that defines a parallel
+	 * projection.<p>The first two parameters define the range of the x and y coordinates.<p> The
+	 * last two parameters define the near and far clipping planes.<p>The near and far clipping
+	 * planes are the minimum and maximum distances from the camera to the screen.<p>The near
+	 * clipping plane must be less than the far clipping plane.<p>The near clipping plane must be
+	 * greater than zero.<p>The far clipping plane must be greater than the near clipping
+	 * plane.<p>The near and far clipping planes must be greater than zero.<p>The near and far
+	 * clipping planes must be less than 100.<p> The near and far clipping planes must be greater
+	 * than zero.<p>The near and far clipping planes must be
+	 */
 	public void adjustProjection() {
 		projectionMatrix.identity();
 		projectionMatrix.ortho(0.0f, 32.0f * 40.0f, 0.0f, 32.0f * 21.0f, 0.0f, 100.0f);
 	}
 
 
+	/**
+	 * This function returns a view matrix that is used to transform the world into the camera's
+	 * view
+	 *
+	 * @return The view matrix.
+	 */
 	public Matrix4f getViewMatrix() {
 		Vector3f cameraFront = new Vector3f(0.0f, 0.0f, -1.0f);
 		Vector3f cameraUp = new Vector3f(0.0f, 1.0f, 0.0f);

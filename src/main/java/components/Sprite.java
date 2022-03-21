@@ -5,8 +5,8 @@ import renderer.Texture;
 
 public class Sprite {
 
-	private Texture texture;
-	private Vector2f[] texCoords;
+	private final Texture texture;
+	private final Vector2f[] texCoords;
 
 	public Sprite(Texture texture) {
 		this.texture = texture;
@@ -24,10 +24,20 @@ public class Sprite {
 		this.texCoords = texCoords;
 	}
 
+	/**
+	 * Returns the texture of the sprite
+	 *
+	 * @return The texture of the sprite.
+	 */
 	public Texture getTexture() {
 		return this.texture;
 	}
 
+	/**
+	 * Returns the texture coordinates for the vertices of this shape
+	 *
+	 * @return The texture coordinates for the vertices.
+	 */
 	public Vector2f[] getTexCoords() {
 		return this.texCoords;
 	}
