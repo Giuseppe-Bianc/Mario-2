@@ -2,7 +2,7 @@ package glengine;
 
 public abstract class Component {
 
-	public GameObject gameObject = null;
+	public transient GameObject gameObject = null;
 
 	/**
 	 * This function is called when the game is started
@@ -16,5 +16,11 @@ public abstract class Component {
 	 *
 	 * @param dt The time in seconds since the last update.
 	 */
-	public abstract void update(float dt);
+	public void update(float dt) {
+
+	}
+
+	public void imgui() {
+
+	}
 }

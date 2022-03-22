@@ -4,7 +4,9 @@ import components.Sprite;
 import components.SpriteRenderer;
 import components.Spritesheet;
 import org.joml.Vector2f;
+import org.joml.Vector4f;
 import util.AssetPool;
+import imgui.ImGui;
 
 public class LevelEditorScene extends Scene {
 
@@ -16,6 +18,7 @@ public class LevelEditorScene extends Scene {
 
 	private GameObject obj1;
 	private Spritesheet sprites;
+	private SpriteRenderer obj1Sprite;
 
 	public LevelEditorScene() {
 
@@ -27,21 +30,27 @@ public class LevelEditorScene extends Scene {
 	@Override
 	public void init() {
 		loadResources();
-
 		this.camera = new Camera(new Vector2f(-250, 0));
-
+		if (levelLoaded) {
+			return;
+		}
 		sprites = AssetPool.getSpritesheet(PRT + "spritesheet.png");
 
 		obj1 = new GameObject(OBJP + "1", new Transform(new Vector2f(UND, UNN),
 				new Vector2f(UNF, UNF)), 2);
-		obj1.addComponent(new SpriteRenderer(new Sprite(
-				AssetPool.getTexture(BLN)
-		)));
+		obj1Sprite = new SpriteRenderer();
+		obj1Sprite.setColor(new Vector4f(1, 0, 0, 1));
+		obj1.addComponent(obj1Sprite);
 		this.addGameObjectToScene(obj1);
+		this.activeGameObject = obj1;
 
+		SpriteRenderer obj2SpriteRenderer = new SpriteRenderer();
+		Sprite obj2Sprite = new Sprite();
+		obj2Sprite.setTexture(AssetPool.getTexture(BLN2));
+		obj2SpriteRenderer.setSprite(obj2Sprite);
 		GameObject obj2 = new GameObject(OBJP + "2", new Transform(new Vector2f(UNQ, UNN),
 				new Vector2f(UNF, UNF)), 3);
-		obj2.addComponent(new SpriteRenderer(new Sprite(AssetPool.getTexture(BLN2))));
+		obj2.addComponent(obj2SpriteRenderer);
 		this.addGameObjectToScene(obj2);
 	}
 
@@ -69,5 +78,12 @@ public class LevelEditorScene extends Scene {
 		}
 
 		this.renderer.render();
+	}
+
+	@Override
+	public void imgui() {
+		ImGui.begin("test window");
+		ImGui.text("Some random text");
+		ImGui.end();
 	}
 }
